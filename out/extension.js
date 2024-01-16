@@ -22,29 +22,102 @@ var __importStar = (this && this.__importStar) || function (mod) {
     __setModuleDefault(result, mod);
     return result;
 };
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deactivate = exports.activate = void 0;
-// The module 'vscode' contains the VS Code extensibility API
-// Import the module and reference it with the alias vscode in your code below
+exports.activate = void 0;
+const fs_1 = __importDefault(require("fs"));
+const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
-// This method is called when your extension is activated
-// Your extension is activated the very first time the command is executed
+const import_path_fixer_1 = require("./import_path_fixer");
+let fixerDictionary = {};
+var FileType;
+(function (FileType) {
+    FileType[FileType["Source"] = 0] = "Source";
+    FileType[FileType["Destination"] = 1] = "Destination";
+})(FileType || (FileType = {}));
 function activate(context) {
-    // Use the console to output diagnostic information (console.log) and errors (console.error)
-    // This line of code will only be executed once when your extension is activated
     console.log('Congratulations, your extension "flutter-import-fixer" is now active!');
-    // The command has been defined in the package.json file
-    // Now provide the implementation of the command with registerCommand
-    // The commandId parameter must match the command field in package.json
     let disposable = vscode.commands.registerCommand('flutter-import-fixer.helloWorld', () => {
-        // The code you place here will be executed every time your command is executed
-        // Display a message box to the user
         vscode.window.showInformationMessage('Hello World from Flutter Import Fixer!');
     });
     context.subscriptions.push(disposable);
+    let file_watcher = vscode.workspace.createFileSystemWatcher("**/*");
+    file_watcher.onDidCreate((e) => {
+        // console.log(`File created at ${e.fsPath}`);
+        if (fs_1.default.statSync(e.fsPath).isDirectory()) {
+            recursiveTriggerOnFileChange(e.fsPath, FileType.Destination);
+        }
+        else {
+            onFilePathChange(e.fsPath, FileType.Destination);
+        }
+    });
+    file_watcher.onDidDelete((e) => {
+        // console.log(`File deleted at ${e.fsPath}`);
+        if (fs_1.default.statSync(e.fsPath).isDirectory()) {
+            recursiveTriggerOnFileChange(e.fsPath, FileType.Source);
+        }
+        else {
+            onFilePathChange(e.fsPath, FileType.Source);
+        }
+    });
+    context.subscriptions.push(disposable);
+    context.subscriptions.push(file_watcher);
+    context.subscriptions.push(file_deleteWatcher);
 }
 exports.activate = activate;
-// This method is called when your extension is deactivated
-function deactivate() { }
-exports.deactivate = deactivate;
+function recursiveTriggerOnFileChange(folderPath, fileType) {
+    fs_1.default.readdirSync(folderPath).forEach(file => {
+        const absolutePath = path.join(folderPath, file);
+        if (fs_1.default.statSync(absolutePath).isDirectory()) {
+            recursiveTriggerOnFileChange(absolutePath, fileType);
+        }
+        else {
+            onFilePathChange(absolutePath, fileType); // or FileType.Destination based on your logic
+        }
+    });
+}
+function onFilePathChange(filePath, fileType) {
+    if (!isDartFile(filePath)) {
+        return;
+    }
+    console.log(`File path changed at ${filePath}`);
+    let fileName = getFileName(filePath);
+    let fixer = getOrCreateImportPathFixer(fileName);
+    let subPath = getSubPathAfterLib(filePath);
+    if (fileType === FileType.Source) {
+        fixer.setSourcePath(subPath);
+    }
+    else if (fileType === FileType.Destination) {
+        fixer.setDestinationPath(subPath);
+    }
+    if (fixer.shouldExecute()) {
+        fixer.executeImportFixes();
+        delete fixerDictionary[fileName];
+    }
+}
+//#region dictionary functions
+function getOrCreateImportPathFixer(fileName) {
+    if (fixerDictionary[fileName]) {
+        return fixerDictionary[fileName];
+    }
+    else {
+        fixerDictionary[fileName] = new import_path_fixer_1.ImportPathFixer(fileName);
+        return fixerDictionary[fileName];
+    }
+}
+//#endregion
+//#region File path functions
+function isDartFile(path) {
+    return path.endsWith('.dart');
+}
+function getSubPathAfterLib(filePath) {
+    let parts = filePath.split('/lib/');
+    return parts.length > 1 ? parts[1] : '';
+}
+function getFileName(filePath) {
+    return path.basename(filePath);
+}
+//#endregion
 //# sourceMappingURL=extension.js.map
