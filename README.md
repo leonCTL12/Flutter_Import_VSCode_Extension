@@ -18,4 +18,9 @@ As this is my first extension, there may be some bugs or room for improvement. I
 
 Please note that this extension is a workaround for handling broken import statements in Flutter. While it aims to improve your coding experience, there may be edge cases that it does not cover. 
 
+## Important Note
+Before renaming or moving any files or folders, please ensure to commit your changes. This will help prevent any loss of work and maintain the integrity of your codebase.
+
 Thank you for your understanding and support!
+
+
