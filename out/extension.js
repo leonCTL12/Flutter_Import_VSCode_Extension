@@ -32,11 +32,11 @@ const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
 const import_path_fixer_1 = require("./import_path_fixer");
 let fixerDictionary = {};
-var FileType;
-(function (FileType) {
-    FileType[FileType["Source"] = 0] = "Source";
-    FileType[FileType["Destination"] = 1] = "Destination";
-})(FileType || (FileType = {}));
+var PathType;
+(function (PathType) {
+    PathType[PathType["Source"] = 0] = "Source";
+    PathType[PathType["Destination"] = 1] = "Destination";
+})(PathType || (PathType = {}));
 function activate(context) {
     console.log('Congratulations, your extension "flutter-import-fixer" is now active!');
     let disposable = vscode.commands.registerCommand('flutter-import-fixer.helloWorld', () => {
@@ -47,49 +47,54 @@ function activate(context) {
     file_watcher.onDidCreate((e) => {
         // console.log(`File created at ${e.fsPath}`);
         if (fs_1.default.statSync(e.fsPath).isDirectory()) {
-            recursiveTriggerOnFileChange(e.fsPath, FileType.Destination);
+            onFolderPathChange(e.fsPath, PathType.Destination);
         }
         else {
-            onFilePathChange(e.fsPath, FileType.Destination);
+            onFilePathChange(e.fsPath, PathType.Destination);
         }
     });
     file_watcher.onDidDelete((e) => {
         // console.log(`File deleted at ${e.fsPath}`);
-        if (fs_1.default.statSync(e.fsPath).isDirectory()) {
-            recursiveTriggerOnFileChange(e.fsPath, FileType.Source);
+        //Cannot use fs.statSync(e.fsPath).isDirectory() because the file is already deleted
+        if (!isFilePath(e.fsPath)) {
+            onFolderPathChange(e.fsPath, PathType.Source);
         }
         else {
-            onFilePathChange(e.fsPath, FileType.Source);
+            onFilePathChange(e.fsPath, PathType.Source);
         }
     });
     context.subscriptions.push(disposable);
     context.subscriptions.push(file_watcher);
-    context.subscriptions.push(file_deleteWatcher);
 }
 exports.activate = activate;
-function recursiveTriggerOnFileChange(folderPath, fileType) {
-    fs_1.default.readdirSync(folderPath).forEach(file => {
-        const absolutePath = path.join(folderPath, file);
-        if (fs_1.default.statSync(absolutePath).isDirectory()) {
-            recursiveTriggerOnFileChange(absolutePath, fileType);
-        }
-        else {
-            onFilePathChange(absolutePath, fileType); // or FileType.Destination based on your logic
-        }
-    });
+function onFolderPathChange(folderPath, pathType) {
+    let folderName = getName(folderPath);
+    let fixer = fixerDictionary[folderName] || (fixerDictionary[folderName] = new import_path_fixer_1.ImportPathFixer(folderName));
+    ;
+    let subPath = getSubPathAfterLib(folderPath);
+    if (pathType === PathType.Source) {
+        fixer.setSourcePath(subPath);
+    }
+    else if (pathType === PathType.Destination) {
+        fixer.setDestinationPath(subPath);
+    }
+    if (fixer.shouldExecute()) {
+        fixer.executeImportFixes();
+        delete fixerDictionary[folderName];
+    }
 }
-function onFilePathChange(filePath, fileType) {
+function onFilePathChange(filePath, pathType) {
     if (!isDartFile(filePath)) {
         return;
     }
-    console.log(`File path changed at ${filePath}`);
-    let fileName = getFileName(filePath);
-    let fixer = getOrCreateImportPathFixer(fileName);
+    let fileName = getName(filePath);
+    let fixer = fixerDictionary[fileName] || (fixerDictionary[fileName] = new import_path_fixer_1.ImportPathFixer(fileName));
+    ;
     let subPath = getSubPathAfterLib(filePath);
-    if (fileType === FileType.Source) {
+    if (pathType === PathType.Source) {
         fixer.setSourcePath(subPath);
     }
-    else if (fileType === FileType.Destination) {
+    else if (pathType === PathType.Destination) {
         fixer.setDestinationPath(subPath);
     }
     if (fixer.shouldExecute()) {
@@ -97,27 +102,19 @@ function onFilePathChange(filePath, fileType) {
         delete fixerDictionary[fileName];
     }
 }
-//#region dictionary functions
-function getOrCreateImportPathFixer(fileName) {
-    if (fixerDictionary[fileName]) {
-        return fixerDictionary[fileName];
-    }
-    else {
-        fixerDictionary[fileName] = new import_path_fixer_1.ImportPathFixer(fileName);
-        return fixerDictionary[fileName];
-    }
-}
-//#endregion
-//#region File path functions
+//#region path functions
 function isDartFile(path) {
     return path.endsWith('.dart');
+}
+function isFilePath(pathString) {
+    return path.extname(pathString) !== '';
 }
 function getSubPathAfterLib(filePath) {
     let parts = filePath.split('/lib/');
     return parts.length > 1 ? parts[1] : '';
 }
-function getFileName(filePath) {
-    return path.basename(filePath);
+function getName(pathString) {
+    return path.basename(pathString);
 }
 //#endregion
 //# sourceMappingURL=extension.js.map

@@ -5,7 +5,7 @@ import { ImportPathFixer } from './import_path_fixer';
 
 let fixerDictionary: { [key: string]: ImportPathFixer } = {};
 
-enum FileType {
+enum PathType {
 	Source,
 	Destination
 }
@@ -23,49 +23,55 @@ export function activate(context: vscode.ExtensionContext) {
 	file_watcher.onDidCreate((e) => {
 		// console.log(`File created at ${e.fsPath}`);
 		if (fs.statSync(e.fsPath).isDirectory()) {
-			recursiveTriggerOnFileChange(e.fsPath, FileType.Destination);
+			onFolderPathChange(e.fsPath, PathType.Destination);
 		} else {
-			onFilePathChange(e.fsPath, FileType.Destination);
+			onFilePathChange(e.fsPath, PathType.Destination);
 		}
 	});
 
 	file_watcher.onDidDelete((e) => {
 		// console.log(`File deleted at ${e.fsPath}`);
-		if (fs.statSync(e.fsPath).isDirectory()) {
-			recursiveTriggerOnFileChange(e.fsPath, FileType.Source);
+		//Cannot use fs.statSync(e.fsPath).isDirectory() because the file is already deleted
+		if (!isFilePath(e.fsPath)) {
+			onFolderPathChange(e.fsPath, PathType.Source);
 		} else {
-			onFilePathChange(e.fsPath, FileType.Source);
+			onFilePathChange(e.fsPath, PathType.Source);
 		}
 	});
 
 	context.subscriptions.push(disposable);
 	context.subscriptions.push(file_watcher);
-	context.subscriptions.push(file_deleteWatcher);
 }
 
-function recursiveTriggerOnFileChange(folderPath: string, fileType: FileType): void {
-	fs.readdirSync(folderPath).forEach(file => {
-		const absolutePath = path.join(folderPath, file);
 
-		if (fs.statSync(absolutePath).isDirectory()) {
-			recursiveTriggerOnFileChange(absolutePath, fileType);
-		} else {
-			onFilePathChange(absolutePath, fileType); // or FileType.Destination based on your logic
-		}
-	});
+
+function onFolderPathChange(folderPath: string, pathType: PathType) {
+	let folderName = getName(folderPath);
+	let fixer = fixerDictionary[folderName] || (fixerDictionary[folderName] = new ImportPathFixer(folderName));;
+	let subPath = getSubPathAfterLib(folderPath);
+	if (pathType === PathType.Source) {
+		fixer.setSourcePath(subPath);
+	} else if (pathType === PathType.Destination) {
+		fixer.setDestinationPath(subPath);
+	}
+
+	if (fixer.shouldExecute()) {
+		fixer.executeImportFixes();
+		delete fixerDictionary[folderName];
+	}
 }
 
-function onFilePathChange(filePath: string, fileType: FileType) {
+function onFilePathChange(filePath: string, pathType: PathType) {
 	if (!isDartFile(filePath)) {
 		return;
 	}
-	console.log(`File path changed at ${filePath}`);
-	let fileName = getFileName(filePath);
-	let fixer = getOrCreateImportPathFixer(fileName);
+
+	let fileName = getName(filePath);
+	let fixer = fixerDictionary[fileName] || (fixerDictionary[fileName] = new ImportPathFixer(fileName));;
 	let subPath = getSubPathAfterLib(filePath);
-	if (fileType === FileType.Source) {
+	if (pathType === PathType.Source) {
 		fixer.setSourcePath(subPath);
-	} else if (fileType === FileType.Destination) {
+	} else if (pathType === PathType.Destination) {
 		fixer.setDestinationPath(subPath);
 	}
 	if (fixer.shouldExecute()) {
@@ -74,31 +80,22 @@ function onFilePathChange(filePath: string, fileType: FileType) {
 	}
 }
 
-//#region dictionary functions
-function getOrCreateImportPathFixer(fileName: string): ImportPathFixer {
-	if (fixerDictionary[fileName]) {
-		return fixerDictionary[fileName];
-	} else {
-		fixerDictionary[fileName] = new ImportPathFixer(fileName);
-		return fixerDictionary[fileName];
-	}
-}
-//#endregion
-
-//#region File path functions
+//#region path functions
 function isDartFile(path: String): boolean {
 	return path.endsWith('.dart');
 }
+
+function isFilePath(pathString: string): boolean {
+	return path.extname(pathString) !== '';
+}
+
 
 function getSubPathAfterLib(filePath: string): string {
 	let parts = filePath.split('/lib/');
 	return parts.length > 1 ? parts[1] : '';
 }
 
-function getFileName(filePath: string): string {
-	return path.basename(filePath);
+function getName(pathString: string): string {
+	return path.basename(pathString);
 }
-
-
-
 //#endregion

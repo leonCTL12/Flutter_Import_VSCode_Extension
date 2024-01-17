@@ -23,28 +23,12 @@ var __importStar = (this && this.__importStar) || function (mod) {
     return result;
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ImportPathFixer = void 0;
+exports.FileImportPathFixer = void 0;
 const fs = __importStar(require("fs"));
 const readline = __importStar(require("readline"));
 const vscode = __importStar(require("vscode"));
-class ImportPathFixer {
-    name;
-    sourcePath;
-    destinationPath;
-    constructor(name) {
-        this.name = name;
-        this.sourcePath = null;
-        this.destinationPath = null;
-    }
-    setSourcePath(filePath) {
-        this.sourcePath = filePath;
-    }
-    setDestinationPath(filePath) {
-        this.destinationPath = filePath;
-    }
-    shouldExecute() {
-        return this.sourcePath !== null && this.destinationPath !== null;
-    }
+const import_path_fixer_1 = require("./import_path_fixer");
+class FileImportPathFixer extends import_path_fixer_1.ImportPathFixer {
     async executeImportFixes() {
         console.log("File ------------------");
         console.log("About to replace import path\n source:" + this.sourcePath + "\n destination: " + this.destinationPath);
@@ -88,5 +72,5 @@ class ImportPathFixer {
         return line.trim().startsWith("import");
     }
 }
-exports.ImportPathFixer = ImportPathFixer;
-//# sourceMappingURL=import_path_fixer.js.map
+exports.FileImportPathFixer = FileImportPathFixer;
+//# sourceMappingURL=file_import_path_fixer.js.map

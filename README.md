@@ -1,71 +1,21 @@
-# flutter-import-fixer README
+# Flutter Import Fixer
 
-This is the README for your extension "flutter-import-fixer". After writing up a brief description, we recommend including the following sections.
+Welcome to the Flutter Import Fixer extension! This is my first extension and it's designed to help you fix broken import statements when you move files or folders in a Flutter project.
 
-## Features
+## Description
 
-Describe specific features of your extension including screenshots of your extension in action. Image paths are relative to this README file.
+When working on a Flutter project, moving files or folders can often break import statements. This extension provides a workaround to handle this issue, making your coding experience smoother and more efficient.
 
-For example if there is an image subfolder under your extension project workspace:
+## Usage
 
-\!\[feature X\]\(images/feature-x.png\)
+After installation, the extension will automatically fix broken import statements when files or folders are moved within your Flutter project.
 
-> Tip: Many popular extensions utilize animations. This is an excellent way to show off your extension! We recommend short, focused animations that are easy to follow.
+## Feedback and Bug Reports
 
-## Requirements
+As this is my first extension, there may be some bugs or room for improvement. If you encounter any issues or have any suggestions, please feel free to email me at leonchantinglok@gmail.com. Your feedback is greatly appreciated!
 
-If you have any requirements or dependencies, add a section describing those and how to install and configure them.
+## Disclaimer
 
-## Extension Settings
+Please note that this extension is a workaround for handling broken import statements in Flutter. While it aims to improve your coding experience, there may be edge cases that it does not cover. 
 
-Include if your extension adds any VS Code settings through the `contributes.configuration` extension point.
-
-For example:
-
-This extension contributes the following settings:
-
-* `myExtension.enable`: Enable/disable this extension.
-* `myExtension.thing`: Set to `blah` to do something.
-
-## Known Issues
-
-Calling out known issues can help limit users opening duplicate issues against your extension.
-
-## Release Notes
-
-Users appreciate release notes as you update your extension.
-
-### 1.0.0
-
-Initial release of ...
-
-### 1.0.1
-
-Fixed issue #.
-
-### 1.1.0
-
-Added features X, Y, and Z.
-
----
-
-## Following extension guidelines
-
-Ensure that you've read through the extensions guidelines and follow the best practices for creating your extension.
-
-* [Extension Guidelines](https://code.visualstudio.com/api/references/extension-guidelines)
-
-## Working with Markdown
-
-You can author your README using Visual Studio Code. Here are some useful editor keyboard shortcuts:
-
-* Split the editor (`Cmd+\` on macOS or `Ctrl+\` on Windows and Linux).
-* Toggle preview (`Shift+Cmd+V` on macOS or `Shift+Ctrl+V` on Windows and Linux).
-* Press `Ctrl+Space` (Windows, Linux, macOS) to see a list of Markdown snippets.
-
-## For more information
-
-* [Visual Studio Code's Markdown Support](http://code.visualstudio.com/docs/languages/markdown)
-* [Markdown Syntax Reference](https://help.github.com/articles/markdown-basics/)
-
-**Enjoy!**
+Thank you for your understanding and support!

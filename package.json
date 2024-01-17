@@ -3,6 +3,7 @@
   "displayName": "Flutter Import Fixer",
   "description": "Aim at fixing import statements after files/folders are moved",
   "version": "0.0.1",
+  "publisher": "LeonCTL",
   "engines": {
     "vscode": "^1.85.0"
   },
