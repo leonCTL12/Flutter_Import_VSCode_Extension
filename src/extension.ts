@@ -14,8 +14,6 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(renameEvent);
 }
 
-
-
 async function onPathChanged(oldPath: string, newPath: string) {
 	if (!fs.statSync(newPath).isDirectory() && !isDartFile(newPath)) {
 		return;

@@ -18,9 +18,9 @@ export class ImportPathFixer {
 
         let dartFiles = await this.findAllDartFiles();
 
-        dartFiles.forEach((filePath) => {
-            this.replaceImportPathInFile(filePath);
-        });
+        for (let filePath of dartFiles) {
+            await this.replaceImportPathInFile(filePath);
+        }
     }
 
     async findAllDartFiles(): Promise<string[]> {
@@ -40,25 +40,31 @@ export class ImportPathFixer {
         return filePaths;
     }
 
-    replaceImportPathInFile(filePath: string) {
-        const fileStream = fs.createReadStream(filePath);
-        const rl = readline.createInterface({
-            input: fileStream,
-            crlfDelay: Infinity
-        });
+    async replaceImportPathInFile(filePath: string) {
+        return new Promise<void>((resolve, reject) => {
+            const fileStream = fs.createReadStream(filePath);
+            const rl = readline.createInterface({
+                input: fileStream,
+                crlfDelay: Infinity
+            });
 
-        let newFileContent = '';
+            let newFileContent = '';
 
-        rl.on('line', (line) => {
-            if (this.isImportStatement(line)) {
-                // Replace 'import' with 'export'
-                line = line.replace(this.sourcePath, this.destinationPath);
-            }
-            newFileContent += line + '\n';
-        });
+            rl.on('line', (line) => {
+                if (this.isImportStatement(line)) {
+                    line = line.replace(this.sourcePath, this.destinationPath);
+                }
+                newFileContent += line + '\n';
+            });
 
-        rl.on('close', () => {
-            fs.writeFileSync(filePath, newFileContent);
+            rl.on('close', () => {
+                fs.writeFileSync(filePath, newFileContent);
+                resolve();
+            });
+
+            rl.on('error', (err) => {
+                reject(err);
+            });
         });
     }
 

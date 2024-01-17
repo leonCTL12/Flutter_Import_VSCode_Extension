@@ -39,9 +39,9 @@ class ImportPathFixer {
         console.log("About to replace import path\n source:" + this.sourcePath + "\n destination: " + this.destinationPath);
         console.log("--------------------");
         let dartFiles = await this.findAllDartFiles();
-        dartFiles.forEach((filePath) => {
-            this.replaceImportPathInFile(filePath);
-        });
+        for (let filePath of dartFiles) {
+            await this.replaceImportPathInFile(filePath);
+        }
     }
     async findAllDartFiles() {
         if (!vscode.workspace.workspaceFolders) {
@@ -55,22 +55,27 @@ class ImportPathFixer {
         const filePaths = dartFiles.map(file => file.fsPath);
         return filePaths;
     }
-    replaceImportPathInFile(filePath) {
-        const fileStream = fs.createReadStream(filePath);
-        const rl = readline.createInterface({
-            input: fileStream,
-            crlfDelay: Infinity
-        });
-        let newFileContent = '';
-        rl.on('line', (line) => {
-            if (this.isImportStatement(line)) {
-                // Replace 'import' with 'export'
-                line = line.replace(this.sourcePath, this.destinationPath);
-            }
-            newFileContent += line + '\n';
-        });
-        rl.on('close', () => {
-            fs.writeFileSync(filePath, newFileContent);
+    async replaceImportPathInFile(filePath) {
+        return new Promise((resolve, reject) => {
+            const fileStream = fs.createReadStream(filePath);
+            const rl = readline.createInterface({
+                input: fileStream,
+                crlfDelay: Infinity
+            });
+            let newFileContent = '';
+            rl.on('line', (line) => {
+                if (this.isImportStatement(line)) {
+                    line = line.replace(this.sourcePath, this.destinationPath);
+                }
+                newFileContent += line + '\n';
+            });
+            rl.on('close', () => {
+                fs.writeFileSync(filePath, newFileContent);
+                resolve();
+            });
+            rl.on('error', (err) => {
+                reject(err);
+            });
         });
     }
     isImportStatement(line) {
