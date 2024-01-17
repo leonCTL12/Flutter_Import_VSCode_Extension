@@ -3,26 +3,12 @@ import * as readline from 'readline';
 import * as vscode from 'vscode';
 
 export class ImportPathFixer {
-    name: string;
-    sourcePath: string | null;
-    destinationPath: string | null;
+    sourcePath: string;
+    destinationPath: string;
 
-    constructor(name: string) {
-        this.name = name;
-        this.sourcePath = null;
-        this.destinationPath = null;
-    }
-
-    setSourcePath(filePath: string) {
-        this.sourcePath = filePath;
-    }
-
-    setDestinationPath(filePath: string) {
-        this.destinationPath = filePath;
-    }
-
-    shouldExecute(): boolean {
-        return this.sourcePath !== null && this.destinationPath !== null;
+    constructor(sourcePath: string, destinationPath: string) {
+        this.sourcePath = sourcePath;
+        this.destinationPath = destinationPath;
     }
 
     async executeImportFixes() {
@@ -66,7 +52,7 @@ export class ImportPathFixer {
         rl.on('line', (line) => {
             if (this.isImportStatement(line)) {
                 // Replace 'import' with 'export'
-                line = line.replace(this.sourcePath as string, this.destinationPath as string);
+                line = line.replace(this.sourcePath, this.destinationPath);
             }
             newFileContent += line + '\n';
         });

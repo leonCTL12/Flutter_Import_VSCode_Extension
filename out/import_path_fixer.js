@@ -28,22 +28,11 @@ const fs = __importStar(require("fs"));
 const readline = __importStar(require("readline"));
 const vscode = __importStar(require("vscode"));
 class ImportPathFixer {
-    name;
     sourcePath;
     destinationPath;
-    constructor(name) {
-        this.name = name;
-        this.sourcePath = null;
-        this.destinationPath = null;
-    }
-    setSourcePath(filePath) {
-        this.sourcePath = filePath;
-    }
-    setDestinationPath(filePath) {
-        this.destinationPath = filePath;
-    }
-    shouldExecute() {
-        return this.sourcePath !== null && this.destinationPath !== null;
+    constructor(sourcePath, destinationPath) {
+        this.sourcePath = sourcePath;
+        this.destinationPath = destinationPath;
     }
     async executeImportFixes() {
         console.log("File ------------------");

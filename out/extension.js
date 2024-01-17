@@ -28,93 +28,34 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.activate = void 0;
 const fs_1 = __importDefault(require("fs"));
-const path = __importStar(require("path"));
 const vscode = __importStar(require("vscode"));
 const import_path_fixer_1 = require("./import_path_fixer");
-let fixerDictionary = {};
-var PathType;
-(function (PathType) {
-    PathType[PathType["Source"] = 0] = "Source";
-    PathType[PathType["Destination"] = 1] = "Destination";
-})(PathType || (PathType = {}));
 function activate(context) {
-    console.log('Congratulations, your extension "flutter-import-fixer" is now active!');
-    let disposable = vscode.commands.registerCommand('flutter-import-fixer.helloWorld', () => {
-        vscode.window.showInformationMessage('Hello World from Flutter Import Fixer!');
+    let renameEvent = vscode.workspace.onDidRenameFiles((e) => {
+        e.files.forEach((file) => {
+            console.log(`File has been renamed from ${file.oldUri.fsPath} to ${file.newUri.fsPath}`);
+            onPathChanged(file.oldUri.fsPath, file.newUri.fsPath);
+        });
     });
-    context.subscriptions.push(disposable);
-    let file_watcher = vscode.workspace.createFileSystemWatcher("**/*");
-    file_watcher.onDidCreate((e) => {
-        // console.log(`File created at ${e.fsPath}`);
-        if (fs_1.default.statSync(e.fsPath).isDirectory()) {
-            onFolderPathChange(e.fsPath, PathType.Destination);
-        }
-        else {
-            onFilePathChange(e.fsPath, PathType.Destination);
-        }
-    });
-    file_watcher.onDidDelete((e) => {
-        // console.log(`File deleted at ${e.fsPath}`);
-        //Cannot use fs.statSync(e.fsPath).isDirectory() because the file is already deleted
-        if (!isFilePath(e.fsPath)) {
-            onFolderPathChange(e.fsPath, PathType.Source);
-        }
-        else {
-            onFilePathChange(e.fsPath, PathType.Source);
-        }
-    });
-    context.subscriptions.push(disposable);
-    context.subscriptions.push(file_watcher);
+    context.subscriptions.push(renameEvent);
 }
 exports.activate = activate;
-function onFolderPathChange(folderPath, pathType) {
-    let folderName = getName(folderPath);
-    let fixer = fixerDictionary[folderName] || (fixerDictionary[folderName] = new import_path_fixer_1.ImportPathFixer(folderName));
-    ;
-    let subPath = getSubPathAfterLib(folderPath);
-    if (pathType === PathType.Source) {
-        fixer.setSourcePath(subPath);
-    }
-    else if (pathType === PathType.Destination) {
-        fixer.setDestinationPath(subPath);
-    }
-    if (fixer.shouldExecute()) {
-        fixer.executeImportFixes();
-        delete fixerDictionary[folderName];
-    }
-}
-function onFilePathChange(filePath, pathType) {
-    if (!isDartFile(filePath)) {
+async function onPathChanged(oldPath, newPath) {
+    if (!fs_1.default.statSync(newPath).isDirectory() && !isDartFile(newPath)) {
         return;
     }
-    let fileName = getName(filePath);
-    let fixer = fixerDictionary[fileName] || (fixerDictionary[fileName] = new import_path_fixer_1.ImportPathFixer(fileName));
-    ;
-    let subPath = getSubPathAfterLib(filePath);
-    if (pathType === PathType.Source) {
-        fixer.setSourcePath(subPath);
-    }
-    else if (pathType === PathType.Destination) {
-        fixer.setDestinationPath(subPath);
-    }
-    if (fixer.shouldExecute()) {
-        fixer.executeImportFixes();
-        delete fixerDictionary[fileName];
-    }
+    let oldSubPath = getSubPathAfterLib(oldPath);
+    let newSubPath = getSubPathAfterLib(newPath);
+    let fixer = new import_path_fixer_1.ImportPathFixer(oldSubPath, newSubPath);
+    await fixer.executeImportFixes();
 }
 //#region path functions
 function isDartFile(path) {
     return path.endsWith('.dart');
 }
-function isFilePath(pathString) {
-    return path.extname(pathString) !== '';
-}
 function getSubPathAfterLib(filePath) {
     let parts = filePath.split('/lib/');
     return parts.length > 1 ? parts[1] : '';
-}
-function getName(pathString) {
-    return path.basename(pathString);
 }
 //#endregion
 //# sourceMappingURL=extension.js.map
