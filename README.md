@@ -16,7 +16,7 @@ This project is open source under the MIT License. This means you're free to use
 
 ## Feedback and Bug Reports
 
-As this is my first open source project, there may be some bugs or room for improvement. If you encounter any issues or have any suggestions, please feel free to open an issue in the **GitHub repository**. Your feedback is greatly appreciated!
+As this is my first open source project, there may be some bugs or room for improvement. If you encounter any issues or have any suggestions, please feel free to open an issue in the GitHub repository. Your feedback is greatly appreciated!
 
 ## Disclaimer
 
