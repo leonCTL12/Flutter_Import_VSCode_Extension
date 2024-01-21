@@ -12,7 +12,7 @@ After installation, the extension will automatically fix broken import statement
 
 ## Open Source
 
-This project is open source under the MIT License. This means you're free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software. See the `LICENSE` file for more details.
+This project is open source under the MIT License. This means you're free to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the software. See the `LICENSE` file for more details. The source code is available on **https://github.com/leonCTL12/Flutter_Import_VSCode_Extension**
 
 ## Feedback and Bug Reports
 
