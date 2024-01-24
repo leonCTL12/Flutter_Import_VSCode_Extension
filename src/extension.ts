@@ -16,14 +16,20 @@ export function activate(context: vscode.ExtensionContext) {
 }
 
 async function onPathChanged(oldPath: string, newPath: string) {
-	if (!fs.statSync(newPath).isDirectory() && !isDartFile(newPath)) {
+	let isDirPath = fs.statSync(newPath).isDirectory();
+	if (!isDirPath && !isDartFile(newPath)) {
 		console.log("Return for non-dart file/repository " + newPath);
 		return;
 	}
 
-	let oldSubPath = getSubPathAfterLib(oldPath);
-	let newSubPath = getSubPathAfterLib(newPath);
-	let fixer = new ImportPathFixer('/' + oldSubPath + '/', '/' + newSubPath + '/');
+
+	let oldSubPath = getSubPathAfterLib(oldPath) + (isDirPath ? '/' : '');
+	let newSubPath = getSubPathAfterLib(newPath) + (isDirPath ? '/' : '');
+
+	console.log("oldSubPath: " + oldSubPath);
+	console.log("newSubPath: " + newSubPath);
+
+	let fixer = new ImportPathFixer(oldSubPath, newSubPath);
 	await fixer.executeImportFixes();
 }
 
@@ -34,6 +40,6 @@ function isDartFile(path: String): boolean {
 
 function getSubPathAfterLib(filePath: string): string {
 	let parts = filePath.split('/lib/');
-	return parts.length > 1 ? parts[1] : '';
+	return parts.length > 1 ? '/' + parts[1] : '/';
 }
 //#endregion
