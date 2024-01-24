@@ -12,9 +12,9 @@ export class ImportPathFixer {
     }
 
     async executeImportFixes() {
-        console.log("File ------------------");
-        console.log("About to replace import path\n source:" + this.sourcePath + "\n destination: " + this.destinationPath);
-        console.log("--------------------");
+        // console.log("File ------------------");
+        // console.log("About to replace import path\n source:" + this.sourcePath + "\n destination: " + this.destinationPath);
+        // console.log("--------------------");
 
         let dartFiles = await this.findAllDartFiles();
 

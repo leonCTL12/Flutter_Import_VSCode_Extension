@@ -1,34 +1,23 @@
 import fs from 'fs';
 import * as vscode from 'vscode';
-import { Queue } from './data_structure/queue';
 import { ImportPathFixer } from './import_path_fixer';
 
 
-let queue = new Queue<() => Promise<void>>();
-
-let renameCounter = 0;
-
 export function activate(context: vscode.ExtensionContext) {
-	let didRenameEvent = vscode.workspace.onDidRenameFiles((e) => {
-		renameCounter--;
-		e.files.forEach((file) => {
-			queue.enqueue(
-				() => onPathChanged(file.oldUri.fsPath, file.newUri.fsPath)
-			);
-			processQueue();
-		});
+	//Notes: for multi-select file move event, the whole operation counts as one rename event
+	let didRenameEvent = vscode.workspace.onDidRenameFiles(async (e) => {
+		for (const file of e.files) {
+			console.log("renamed from " + file.oldUri.fsPath + " to " + file.newUri.fsPath);
+			await onPathChanged(file.oldUri.fsPath, file.newUri.fsPath);
+		}
 	});
-
-	let willRenameEvent = vscode.workspace.onWillRenameFiles((e) => {
-		renameCounter++;
-	});
-
 
 	context.subscriptions.push(didRenameEvent);
 }
 
 async function onPathChanged(oldPath: string, newPath: string) {
 	if (!fs.statSync(newPath).isDirectory() && !isDartFile(newPath)) {
+		console.log("Return for non-dart file/repository " + newPath);
 		return;
 	}
 
@@ -48,17 +37,3 @@ function getSubPathAfterLib(filePath: string): string {
 	return parts.length > 1 ? parts[1] : '';
 }
 //#endregion
-
-async function processQueue() {
-	while (!queue.isEmpty()) {
-		//This does not work, coz rename counter is possible to increment when the task is executing
-		if (renameCounter > 0) {
-			continue;
-		}
-		const task = queue.dequeue();
-		if (task) {
-			await task();
-		}
-	}
-
-}
