@@ -2,7 +2,7 @@
   "name": "flutter-import-fixer",
   "displayName": "Flutter Import Fixer",
   "description": "Aim at fixing import statements after files/folders are moved",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "publisher": "LeonCTL",
   "engines": {
     "vscode": "^1.85.0"
